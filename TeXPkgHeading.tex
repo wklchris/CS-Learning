@@ -1,0 +1,37 @@
+% Typesetting Formats
+\setlength{\lineskiplimit}{3pt}
+\setlength{\lineskip}{3pt}
+
+\usepackage{geometry}
+  \geometry{vmargin=1.1in, hmargin=1.2in}
+
+%\usepackage{titlesec}
+%\titleclass{\part}{top}
+%\titleformat{\part}[display]{\huge\bfseries\centering}
+%    {\partname~\thepart}{0pt}{}
+%\titlespacing*{\part}{0pt}{40pt}{40pt}
+
+
+% Lists
+\usepackage[normalem]{ulem}
+\usepackage[inline]{enumitem}
+	\setlist[enumerate]{font=\bfseries,labelindent=0pt,itemsep=0pt,parsep=0pt,topsep=.5ex,partopsep=0pt}
+	\setlist[itemize]{font=\bfseries,itemsep=0pt,parsep=0pt,topsep=.5ex,partopsep=0pt}
+	\setlist[description]{font=\bfseries\ttfamily,itemsep=0pt,parsep=.5ex,topsep=0pt,partopsep=0pt}
+
+
+% Maths & Plotting
+\usepackage{amsmath}
+
+\usepackage{graphicx}
+  \graphicspath{{./pics/}}
+\usepackage{standalone}
+\usepackage{tikz}
+  \usetikzlibrary{math}
+
+% Links
+\usepackage{hyperref}
+\hypersetup{colorlinks, bookmarksopen = true, bookmarksnumbered = true, pdftitle=CS-Learning, pdfauthor=K.L Wu, pdfstartview=FitH}
+
+
+\endinput
