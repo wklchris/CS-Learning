@@ -348,7 +348,7 @@ git rm data/\*.log
 放弃追踪（untrack）文件：即让 git 放弃记录某一文件的修改状态，但仍保留该文件在磁盘．这一情形通常是你在添加 `.gitignore` 前就进行了 `add` 的误操作.这是你需要 `--cached` 选项：
 ```sh
 $ git rm --cached <filename>
-``` 
+```
 
 #### 移动或重命名文件 (mv)
 相当于先 `rm` 再 `add`，但是 `mv` 命令更简洁：
@@ -427,7 +427,7 @@ $ git tag -a v1.0 36e8d6b
 ```
 
 #### 查看标签
-查看所有的标签，或用 <a href="#glob">glob 通配符</a>查询：
+查看所有的标签，或用上文介绍的 <a href="#glob">glob 模式</a>查询：
 ```sh
 $ git tag
 $ git tag --list "v1.0*"
@@ -509,8 +509,9 @@ $ git checkout -b test
 我们通过一个例子来了解分支合并．这个例子来自与官方手册，有改动．
 
 假设你拥有一个仓库，master 分支有 3 个提交，而你正在 dev 分支上工作：
-
-<img src="pic/branch-01.svg" width="75%">
+<p align="center">
+  <img src="pic/branch-01.svg" width="75%">
+</p>
 
 注意到你的 dev 分支此时是领先于 master 分支的．这时，你接到一个 issue 17，说你的 master 分支有一个问题需要立刻修复，因此你不得不切换分支去解决它．你的做法是回到 master 分支，新建一个 hotfix 分支（假设你的 dev 工作目录的改动都已经提交；我们稍晚再来讨论存在文件未提交的情况）：
 ```sh
@@ -521,7 +522,9 @@ $ git commit -a -m "Fix issue #17."
 ```
 
 此时分叉（diverge）就出现了，你的 hotfix 分支修复后，指针位于 C4:
-<img src="pic/branch-02.svg" width="75%">
+<p align="center">
+  <img src="pic/branch-02.svg" width="75%">
+</p>
 
 既然 hotfix 分支完成了它的使命，那么就需要将它的内容 `merge` 到 master 分支，并在成功合并后删除它：
 ```sh
@@ -539,7 +542,9 @@ $ git commit -a -m "New feature & bug: ..."
 ```
 
 注意到 master 位于 C4 而不再是 C2，这是因为与已被删除的 hotfix 分支合并过：
-<img src="pic/branch-03.svg" width="75%">
+<p align="center">
+  <img src="pic/branch-03.svg" width="75%">
+</p>
 
 现在需要开始一次新的合并了，切换到 master 分支以进行合并：
 ```sh
@@ -553,10 +558,12 @@ $ git merge dev
 - C2：两个分支的共同祖先（common ancestor）．
 
 此时的合并是一个三方合并（three-way merge）,无法通过简单地移动指针来完成．因此，git 会新建一个合并提交（merge commit）C6，其特点是拥有两个父提交．
-<img src="pic/branch-04.svg" width="75%">
+<p align="center">
+  <img src="pic/branch-04.svg" width="75%">
+</p>
 
 如果没有冲突，就能成功合并．合并后，你可以删除 dev 分支．
 ```sh
 $ git branch -d dev
 ```
-在下文会讨论如果发生了冲突，将如果处理．
+在下文会讨论如果发生了冲突，将如何处理．
