@@ -1,6 +1,7 @@
 # Git 学习笔记
+*本项目的 GitHub 仓库地址：[wklchris 的 CS-Learning 仓库](https://github.com/wklchris/CS-Learning)．*
 
-本文介绍了学习 Git 的路线，参考文献可从官网此处下载：[ProGit](https://git-scm.com/book/zh/v2)．
+本文介绍了学习 Git 的路线，参考文献是官方教程，可从官网此处下载：[ProGit](https://git-scm.com/book/zh/v2)．
 
 ## 目录
 
@@ -49,6 +50,16 @@
         1. [创建分支 (branch)](#创建分支-branch)
         2. [切换分支 (checkout)](#切换分支-checkout)
         3. [合并分支 (merge)](#合并分支-merge)
+        4. [删除分支 (branch -d)](#删除分支-branch--d)
+        5. [冲突处理](#冲突处理)
+        6. [查看分支列表](#查看分支列表)
+        7. [分支工作流策略](#分支工作流策略)
+            1. [长期分支 (Long-Running Branches)](#长期分支-Long-Running-Branches)
+            2. [特性分支 (Topic Branches)](#特性分支-Topic-Branches)
+        8. [远程分支](#远程分支)
+            1. [跟踪分支 (--track)](#跟踪分支---track)
+            2. [删除远程分支 (--delete)](#删除远程分支---delete)
+        9. [变基 (rebase)](#变基-rebase)
 
 ## Git 简介
 
@@ -120,6 +131,7 @@ $ git config --global core.editor <editor>
 
 ### 仓库操作
 #### 初始化仓库 (init)
+这部分只介绍了本地仓库的初始化；如果想了解远程仓库的操作，请参考[远程仓库操作](#远程仓库操作)部分的内容．
 
 进入你的项目目录，输入以下命令来初始化：
 ```sh
@@ -138,7 +150,10 @@ $ git remote add <remote-name> <url>
 ```sh
 $ git clone <repo-url> [<folder-name>]
 ```
-默认会在当前目录新建一个与仓库同名的文件夹，并将仓库内容放入；`<folder-name>` 参数是可省略的，如果指定将以该值作为仓库文件夹的名称．
+默认会在当前目录新建一个与仓库同名的文件夹，并将仓库内容放入；`<folder-name>` 参数是可省略的，如果指定将以该值作为仓库文件夹的名称．该命令会自动将远程仓库命名为 origin（就像默认的分支名叫 master 一样），如果你不喜欢，可以用 `-o` 选项更改：
+```sh
+$ git clone -o <remote-repo-name> <repo-url>
+```
 
 ### 提交文件
 #### 检查文件状态 (status)
@@ -562,8 +577,110 @@ $ git merge dev
   <img src="pic/branch-04.svg" width="75%">
 </p>
 
-如果没有冲突，就能成功合并．合并后，你可以删除 dev 分支．
+### 删除分支 (branch -d)
+如果没有冲突，就能成功合并．上例合并后，你可以删除 dev 分支（要删除未合并的分支，参考[查看分支列表](#查看分支列表)一节）．
 ```sh
 $ git branch -d dev
 ```
-在下文会讨论如果发生了冲突，将如何处理．
+在下文会讨论如果发生了冲突，将如何处理．关于删除远程仓库中的分支，参考
+
+### 冲突处理
+在合并分支时，如果存在分叉，那么可能会有冲突（conflict）．冲突是指在不同的分支中，同一个文件的同一部分（比如同一行）被以不同的方式修改了．此时如果使用 `git merge` 命令，git 会在检测到冲突后自动暂停合并，弹出合并工具界面，等待用户解决．
+
+参考官方手册得来的一个冲突提示样例：
+```sh
+<<<<<<< HEAD:index.html
+<div id="footer">contact : email.support@github.com</div>
+=======
+<div id="footer">
+please contact us at support@github.com
+</div>
+>>>>>>> dev:index.html
+```
+上述信息表示，`HEAD` 指针指向的版本（目前在 master 分支上，因为之前我们在尝试进行合并操作之前切换到了 master 分支）的内容如 “=======” 上方的内容所示；而 dev 分支的同一部分内容却如其下方所示.
+
+要解决冲突，通常的做法是选择其中一个分支保留（当然，你也可以自行输入内容）：  
+1. 确定要保留哪个分支的内容；
+2. 将 "=======" 另一侧的所有行删除；
+3. 将 "<<<<<<<", "=======" 与 ">>>>>>>" 所在的行删除．
+
+例如，上文如果要保留 dev 分支的内容，那么就更改为：
+```sh
+<div id="footer">
+please contact us at support@github.com
+</div>
+```
+然后你可以退出合并工具界面了，告诉 git 已经解决了冲突．
+
+### 查看分支列表
+使用 `git branch` 命令查看分支列表，带“*”的是当前分支（即 HEAD 所在分支）：
+```sh
+$ git branch
+* dev
+ master
+```
+使用 `-v` 选项来查看每个分支的最后一次提交：
+```sh
+$ git branch -v
+* dev    e6c4681 Attempt to fix center-aligning of picture in Markdown.
+  master bae6fc8 Init
+```
+使用 `--merged` 选项以只显示完全合并到当前分支的分支．这个列表中的分支与你的当前分支没有分叉，且落后于当前分支；无特殊情况下，它们可以被删除（比如上文的 hotfix 分支已完全合并到 master 分支，可以删除）．`--no-merged` 选项则相反．
+```sh
+$ git branch --merged
+$ git branch --no-merged
+```
+注意：如果你尝试用 `-d` 选项删除分支，但这个分支位于 `--no-merged` 列表中，git 会阻止你的删除操作（因为这意味着这个分支中的工作会丢失）．不过你总能使用 `-D` 选项来强制进行删除操作．
+
+选项 `-vv` 可以查看跟踪分支的情况，参考[跟踪分支 (--track)](#跟踪分支---track)部分的内容．
+
+### 分支工作流策略
+不同的项目可能适用不同的分支策略（branching scheme）．
+
+#### 长期分支 (Long-Running Branches)
+这应该是最常使用的一种分支工作方式．它具有以下特点：
+- 只在一个分支上保留稳定的代码，比如 master 分支．
+- 拥有多个前沿分支，它们往往与稳定分支不分叉，只是领先于稳定分支（换言之，它们总能被以简单移动 HEAD 指针 (fast-forward) 方式进行合并）．
+- 当前沿分支达到某个较稳定的状态，就向稳定分支合并一次．
+- 开发总是在前沿分支上进行，主分支上只保留稳定版本．
+- 当你在一个巨型项目中时，你可能需要多个稳定分支，以控制不同的“稳定程度”．
+
+#### 特性分支 (Topic Branches)
+如同上文的 hotfix 分支和 dev 分支的例子，这样的工作往往需要三方合并，或者至少需要在一段时间后才能确定哪些分支的内容可以被丢弃．
+
+好在 git 总是可以快速地创建、合并和删除分支，因此一个项目里有数十个分支也不是太令人吃惊．当然，**我们通常不需要将它们推送到远程仓库中**．
+
+### 远程分支
+当我们使用 GitHub 或其他远程仓库的时候，它们也会存在一些指针指向你的最新提交位置．比如你将项目的 master 与 dev 分支都推送到了远程，本地的 test 分支并没有推送，那么你在远程会拥有 origin/master 与 origin/dev 两个分支，而没有 test 对应的远程分支．
+
+#### 跟踪分支 (--track)
+跟踪分支也叫上游分支．当你从远程仓库克隆了分支，你的这个本地分支会自动设置为跟踪该远程仓库的对应分支．这是你就可以使用 `git pull` 命令方便地进行本地仓库更新（参考[抓取 (fetch) 与拉取 (pull)](#抓取-fetch-与拉取-pull)部分的内容）．
+
+如果你的需要手动设置本地分支跟踪远程分支，使用：
+```sh
+$ git checkout --track origin/issuefix
+```
+这个操作会在本地创建一个 issuefix 分支，并设置其跟踪 origin 远程仓库中的对应分支．实质上，该命令是下面这条命令的简写：
+```sh
+$ git checkout -b issuefix origin/issuefix
+```
+更改紧跟 `-b` 选项后的 issuefix，就能将本地分支设置成另外的名称．
+
+设置了跟踪后，用 `@{upstream}` 或 `@{u}` 来指代远程分支．例如，在你设置 issuefix 分支跟踪对应远程分之后，你可以使用 `git merge @{u}` 代替 `git merge origin/issuefix`．
+
+通过 `branch` 命令的 `-vv` 选项来查看跟踪分支的信息：
+```sh
+$ git branch -vv
+* dev    e6c4681 Attempt to fix center-aligning of picture in Markdown.
+  master bae6fc8 [origin/master] Init
+```
+以上表示我的 dev 分支尚未设置跟踪远程分支．
+
+#### 删除远程分支 (--delete)
+如果你向服务器推送了特性分支或问题修复，那么结束并合并到主分支后，该分支往往就可以删除：
+```sh
+$ git push origin --delete issuefix
+```
+
+### 变基 (rebase)
+变基实质上是与三路合并操作相关的一个操作，不过显然并不常用．
