@@ -1153,3 +1153,4 @@ $ git merge bugfix
 $ git branch -d bugfix
 ```
 向 master 分支伪合并 bugfix 分支（即使已经真的合并过了）的好处是欺骗了 git；以后将 dev 分支向 master 分支合并时，就不会有来自 bugfix 分支的冲突．
+ 
