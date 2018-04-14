@@ -25,11 +25,13 @@
             4. [内容比对 (diff)](#内容比对-diff)
             5. [提交更新 (commit)](#提交更新-commit)
         3. [变更与回退](#变更与回退)
-            1. [从工作目录回退 (checkout)](#从工作目录回退-checkout)
-            2. [从暂存区回退 (reset HEAD)](#从暂存区回退-reset-HEAD)
-            3. [重新提交 (commit --amend)](#重新提交-commit---amend)
-            4. [回退到指定的版本 (revert)](#回退到指定的版本-revert)
+            1. [从工作目录回退 (reset --hard)](#从工作目录回退-reset---hard)
+            2. [从暂存区回退 (reset --mixed)](#从暂存区回退-reset---mixed)
+            3. [从版本回退 (reset --soft)](#从版本回退-reset---soft)
+            4. [修改提交 (commit --amend)](#修改提交-commit---amend)
         4. [查看提交历史 (log)](#查看提交历史-log)
+            1. [基本参数](#基本参数)
+            2. [比较分支间的提交](#比较分支间的提交)
         5. [文件操作](#文件操作)
             1. [删除文件 (rm)](#删除文件-rm)
             2. [放弃追踪文件 (rm --cached)](#放弃追踪文件-rm---cached)
@@ -38,7 +40,7 @@
             1. [设置远程仓库 (remote)](#设置远程仓库-remote)
             2. [抓取 (fetch) 与拉取 (pull)](#抓取-fetch-与拉取-pull)
             3. [推送到远程仓库 (push)](#推送到远程仓库-push)
-            4. [管理远程仓库](#管理远程仓库)
+            4. [管理远程仓库 (remote)](#管理远程仓库-remote)
         7. [标签 (tag)](#标签-tag)
             1. [添加标签](#添加标签)
             2. [追加标签](#追加标签)
@@ -54,12 +56,39 @@
         5. [冲突处理](#冲突处理)
         6. [查看分支列表](#查看分支列表)
         7. [分支工作流策略](#分支工作流策略)
-            1. [长期分支 (Long-Running Branches)](#长期分支-Long-Running-Branches)
-            2. [特性分支 (Topic Branches)](#特性分支-Topic-Branches)
+            1. [长期分支](#长期分支)
+            2. [特性分支](#特性分支)
         8. [远程分支](#远程分支)
             1. [跟踪分支 (--track)](#跟踪分支---track)
             2. [删除远程分支 (--delete)](#删除远程分支---delete)
-        9. [变基 (rebase)](#变基-rebase)
+        9. [变基\* (rebase)](#变基-rebase)
+            1. [基础变基流程](#基础变基流程)
+            2. [更复杂的变基场景](#更复杂的变基场景)
+            3. [变基的风险](#变基的风险)
+            4. [变基改写日志](#变基改写日志)
+            5. [合并与变基的争论](#合并与变基的争论)
+    6. [其他 Git 命令](#其他-Git-命令)
+        1. [显示 (show)](#显示-show)
+        2. [引用日志 (reflog)](#引用日志-reflog)
+        3. [储藏 (stash) 与清理 (clean)](#储藏-stash-与清理-clean)
+            1. [恢复储藏 (stash apply)](#恢复储藏-stash-apply)
+            2. [丢弃储藏 (stash drop)](#丢弃储藏-stash-drop)
+            3. [清理目录](#清理目录)
+        4. [GPG 签署工具](#GPG-签署工具)
+            1. [签署标签](#签署标签)
+            2. [签署提交](#签署提交)
+            3. [签署合并与拉取](#签署合并与拉取)
+            4. [查看与验证签名](#查看与验证签名)
+        5. [高级冲突处理](#高级冲突处理)
+            1. [中断合并](#中断合并)
+            2. [忽略空白变更](#忽略空白变更)
+            3. [手动合并文件](#手动合并文件)
+            4. [检出冲突](#检出冲突)
+            5. [查询日志](#查询日志)
+            6. [冲突的差异与日志](#冲突的差异与日志)
+            7. [撤销合并提交](#撤销合并提交)
+            8. [偏好合并](#偏好合并)
+            9. [伪合并](#伪合并)
 
 ## Git 简介
 
@@ -99,6 +128,8 @@ Git 仓库是保存对象数据库的地方．工作目录是从仓库中提取�
 - **已提交（commited）**：文件更改已记录到仓库中．
 - **已修改（modified）**：文件被修改了（与最后一次提交的文件不同），但修改尚未记录．
 - **已暂存（staged）**：文件已被修改且被标记，将在下一次提交中记录到仓库．
+
+git 中的 HEAD 指针指向当前位置（最后一次提交），除非人为地移动它．
 
 ## Git 准备工作
 
@@ -197,12 +228,13 @@ Changes to be committed:
     modified: test.py
 ```
 
-你也可以通过 `git add .` 来暂存所有文件：
+你也可以通过 `git add *` 来暂存所有文件：
 ```sh
-$ git add .
+$ git add *
 ```
-
-通常版本控制只针对文本文件；例如 `.pdf` 或 `.jpg` 这类文件一般不加入暂存．
+其他：  
+- 通常版本控制只针对文本文件；例如 `.pdf` 或 `.jpg` 这类文件一般不加入暂存．
+- 在暂存时使用 `-i` （或 `--interactive`）选项，可以进入交互式暂存界面．
 
 #### 忽略文件 (.gitignore)
 
@@ -233,6 +265,11 @@ B/*.pdf     # 忽略文件夹 B 下的（不包括子文件夹） pdf 文件
 B/**/*.pdf  # 忽略文件夹 B 及其子文件夹中的 pdf 文件
 ```
 
+如果你想要将一些后缀加入全局的忽略列表，可以在 `~` 目录下新建一个 `.gitignore_global` 文件，并使用命令：
+```sh
+$ git config --global core.excludesfile ~/.gitignore_global
+```
+
 这里有一个 [Github 仓库](https://github.com/github/gitignore)，收录了许多编程语言的 `.gitignore` 文件样式，可以参考．
 
 #### 内容比对 (diff)
@@ -241,7 +278,7 @@ B/**/*.pdf  # 忽略文件夹 B 及其子文件夹中的 pdf 文件
 ```sh
 $ git diff [<filename>]
 ```
-如果不指定文件名，那么会查看两次版本快照的差异．
+如果不指定文件名，那么会查看两次版本快照所有文件的差异．
 
 如果加入 `--staged` 选项，则可以查看暂存区与版本库中最新版本之间的差异：
 ```sh
@@ -270,30 +307,48 @@ $ git commit -a -m "Input text here."
 ```
 
 ### 变更与回退
-#### 从工作目录回退 (checkout)
+我们简单提到过 git 使用 HEAD 指针指向最新的一次提交．每一次提交的之前的紧邻提交称为父提交．比如次新的提交就是 `HEAD~`，父提交的父提交是 `HEAD~2`．(确切地说，`~` 指代的是第一父提交，第一父提交的第二父提交需要使用 `HEAD~2^2`．请参考[分支 (branch)](#分支-branch)部分的内容)．
+
+#### 从工作目录回退 (reset --hard)
 你对工作目录的内容做了修改，但尚未 `add` 到暂存区．现在你想放弃这些修改，回到上次 `commit` 之后的状态:
 ```sh
-$ git checkout -- <filename>
+# 危险的命令！
+$ git reset --hard HEAD <filename>
 ```
+这里 `HEAD` 是缺省值，可以省略；你也可以用 SHA-1 值（或其前 7 位）来指定要回退到的版本．本质是放弃并销毁上次 `commit` 以来所有的更改．
+
 注意：**这是个危险的命令；由于被放弃的内容从未被提交，因此无法再找回**．
 
-#### 从暂存区回退 (reset HEAD)
+#### 从暂存区回退 (reset --mixed)
 你的修改已经 `add` 到暂存区，现在你想把暂存区清空，但在本地文件中仍保留这些更改：
 ```sh
-$ git reset HEAD <filename>
+$ git reset --mixed HEAD <filename>
 ```
+这里的 `--mixed` 选项是缺省值，可以省略．该命令相当于取消了 `add` 命令，更改仍存在于文件中．
 
-#### 重新提交 (commit --amend)
+#### 从版本回退 (reset --soft)
+你的文件已 `commit` 到仓库记录中去，现在你想将 HEAD 指针移动到上一个 commit 的位置:
+```sh
+$ git reset --soft HEAD~
+```
+`HEAD~` 表示 HEAD 指针的父节点．
+
+此时你的暂存区、工作目录并未被回退，仍保留着你的改动．本质是撤销了最近的一次 `commit` 命令．
+
+注意，**如果你要应用回退的版本已经推送到远程仓库，那么不要使用 `reset` 命令**．请使用 `revert` 命令来新建一个提交，这个提交的内容将与你指定的版本一致：
+```sh
+$ git revert HEAD~
+```
+`revert` 命令在还原合并提交中也有作用，可以参考[撤销合并提交](#撤销合并提交)部分的内容．
+
+#### 修改提交 (commit --amend)
 如果在提交时忘记了 `add` 某个文件，或者其他需要修改提交的场合，使用 `--amend` 参数．例如：
 ```sh
 $ git commit -m 'initial commit'
 $ git add forgotten_file
 $ git commit --amend
 ```
-
 它会将暂存区内的修改追加到上个提交中去．如果没有任何修改，它允许你更改提交的说明文本．
-
-#### 回退到指定的版本 (revert)
 
 
 ### 查看提交历史 (log)
@@ -302,10 +357,11 @@ $ git commit --amend
 $ git log
 ```
 
+#### 基本参数
 这里将参数分为输出参数与过滤参数两种．输出参数主要有：
 - `-p`：查看提交内容的差异．
 - `--abbrev-commit`：只显示简洁 SHA-1，一般是其前 7 个字符．
-- `--color`：启用颜色．常用的颜色包括：red, green, yellow, blue, magenta, cyan, white, normal; 以及可在以上颜色之前加上格式 bold, dim, ul, blink, reverse. 例如：`%C(bold blue)`．
+- `--color`：启用颜色．常用的颜色包括：red, green, yellow, blue, magenta, cyan, black, white, normal; 以及可在以上颜色之前加上格式 bold, dim, ul, blink, reverse. 例如：`%C(bold blue)`．
 - `--graph`：用图像的方式显示你的分支历史．
 - `--stat`：列出提交修改的文件以及一些基本修改的信息．
 - `--shortstat`：只列出修改的文件数量和修改的行数．
@@ -343,6 +399,26 @@ bae6fc8  (origin/master, origin/dev, master) - Init (3 days ago by wklchris)
 - `--until/--before`：显示某日期之前的提交．
 
 注意：**过滤参数中的“搜索”使用时，默认会以逻辑“或”连接，除非添加 `--all-match` 选项．**
+
+#### 比较分支间的提交
+还有一种常用的操作，用于显示位于某分支但未合并到另一分支的提交．比如显示位于 dev 分支但尚未加入 master 分支的提交、以及在当前分支却不在远程仓库的提交：
+```sh
+# 两点命令
+$ git log master..dev
+$ git log origin/master..HEAD
+```
+
+如果使用三点命令，则会显示只位于两分支之一的提交．通常使用 `--left-right` 选项来让 git 显示提交位于哪个分支上：
+```sh
+# 三点命令
+$ git log --left-right master...dev
+```
+
+用 `^` 或者 `--not` 指明你不想查看的提交．比如，查看被 A, B 包含但不被 C 包含的提交，以下两种均可：
+```sh
+$ git log refA refB ^refC
+$ git log refA refB --not refC
+```
 
 
 ### 文件操作
@@ -406,7 +482,7 @@ $ git push origin master
 
 上游的含义是在你克隆仓库到推送修改这一时段内，没有新的推送到达远程仓库．例如，如果你和另一个人同时克隆了仓库，但他先于你推送，那么你必须拉取他的内容合并后才能推送你的修改．
 
-#### 管理远程仓库
+#### 管理远程仓库 (remote)
 查看远程仓库，以及进行 `pull/push` 时默认的操作，使用：
 ```sh
 $ git remote show <remote-name>
@@ -520,6 +596,10 @@ $ git checkout dev
 $ git checkout -b test
 ```
 
+更多的关于 `checkout` 命令的内容，参考本文以下章节：
+- [跟踪分支 (--track)](#跟踪分支---track)
+- [检出冲突](#检出冲突)
+
 ### 合并分支 (merge)
 我们通过一个例子来了解分支合并．这个例子来自与官方手册，有改动．
 
@@ -572,17 +652,18 @@ $ git merge dev
 - C5：dev 分支当前位置；
 - C2：两个分支的共同祖先（common ancestor）．
 
-此时的合并是一个三方合并（three-way merge）,无法通过简单地移动指针来完成．因此，git 会新建一个合并提交（merge commit）C6，其特点是拥有两个父提交．
+此时的合并是一个三方合并（three-way merge）,无法通过简单地移动指针来完成．因此，git 会新建一个合并提交（merge commit）C6，其特点是拥有两个父提．
 <p align="center">
   <img src="pic/branch-04.svg" width="75%">
 </p>
+由于我们在 master 分支上进行合并，因此 C4 称为第一父提交，C5 称为第二父提交．
 
 ### 删除分支 (branch -d)
 如果没有冲突，就能成功合并．上例合并后，你可以删除 dev 分支（要删除未合并的分支，参考[查看分支列表](#查看分支列表)一节）．
 ```sh
 $ git branch -d dev
 ```
-在下文会讨论如果发生了冲突，将如何处理．关于删除远程仓库中的分支，参考
+在下文会讨论如果发生了冲突，将如何处理．关于删除远程仓库中的分支，参考[删除远程分支 (--delete)](#删除远程分支---delete)部分的内容．
 
 ### 冲突处理
 在合并分支时，如果存在分叉，那么可能会有冲突（conflict）．冲突是指在不同的分支中，同一个文件的同一部分（比如同一行）被以不同的方式修改了．此时如果使用 `git merge` 命令，git 会在检测到冲突后自动暂停合并，弹出合并工具界面，等待用户解决．
@@ -610,7 +691,7 @@ please contact us at support@github.com
 please contact us at support@github.com
 </div>
 ```
-然后你可以退出合并工具界面了，告诉 git 已经解决了冲突．
+然后你可以退出合并工具界面了，告诉 git 已经解决了冲突．想了解更复杂的冲突处理，参考[高级冲突处理](#高级冲突处理)部分的内容．
 
 ### 查看分支列表
 使用 `git branch` 命令查看分支列表，带“*”的是当前分支（即 HEAD 所在分支）：
@@ -637,18 +718,18 @@ $ git branch --no-merged
 ### 分支工作流策略
 不同的项目可能适用不同的分支策略（branching scheme）．
 
-#### 长期分支 (Long-Running Branches)
-这应该是最常使用的一种分支工作方式．它具有以下特点：
+#### 长期分支 
+长期分支（Long-Running Branches）策略应该是最常使用的一种分支工作方式．它具有以下特点：
 - 只在一个分支上保留稳定的代码，比如 master 分支．
 - 拥有多个前沿分支，它们往往与稳定分支不分叉，只是领先于稳定分支（换言之，它们总能被以简单移动 HEAD 指针 (fast-forward) 方式进行合并）．
 - 当前沿分支达到某个较稳定的状态，就向稳定分支合并一次．
 - 开发总是在前沿分支上进行，主分支上只保留稳定版本．
 - 当你在一个巨型项目中时，你可能需要多个稳定分支，以控制不同的“稳定程度”．
 
-#### 特性分支 (Topic Branches)
-如同上文的 hotfix 分支和 dev 分支的例子，这样的工作往往需要三方合并，或者至少需要在一段时间后才能确定哪些分支的内容可以被丢弃．
+#### 特性分支
+如同上文的 hotfix 分支和 dev 分支的例子，这样的工作往往需要三方合并，或者至少需要在一段时间后才能确定哪些分支的内容可以被丢弃．这时就可以使用特性分支（Topic Branches）策略．
 
-好在 git 总是可以快速地创建、合并和删除分支，因此一个项目里有数十个分支也不是太令人吃惊．当然，**我们通常不需要将它们推送到远程仓库中**．
+好在 git 总是可以快速地创建、合并和删除分支，因此一个项目里有数十个分支也不是太令人吃惊．当然，远程仓库一般只存有少量、重要的分支，**不要将数量众多的特性分支都推送到远程仓库中**．
 
 ### 远程分支
 当我们使用 GitHub 或其他远程仓库的时候，它们也会存在一些指针指向你的最新提交位置．比如你将项目的 master 与 dev 分支都推送到了远程，本地的 test 分支并没有推送，那么你在远程会拥有 origin/master 与 origin/dev 两个分支，而没有 test 对应的远程分支．
@@ -682,5 +763,393 @@ $ git branch -vv
 $ git push origin --delete issuefix
 ```
 
-### 变基 (rebase)
-变基实质上是与三路合并操作相关的一个操作，不过显然并不常用．
+### 变基\* (rebase)
+*本节是一个选读章节，内容的实用性可能不高．*
+
+变基实质上是与三路合并操作相关的一个操作，不过一般来说并不常用．
+
+#### 基础变基流程
+简单地说，变基修改了版本历史，将不同分支的提交在后期用移花接木的方式加入到主分支中去，使得主分支之外的分支仿佛从未出现过．还是上文的那个例子：假设 master 分支上的提交 C4、dev 分支上的 C5、共同祖先 C2 需要处理合并问题，变基的做法是将 C3 和 C5 的内容与 C4 做比较，然后在 C4 之后新建一个新的包含 C5 中所有改动的 C5'．之前的 dev 分支就不需要再管了，整个项目在分叉点后依次是 C2, C4, C3', C5'，它们都位于 master 分支上．
+<p align="center">
+  <img src="pic/branch-03.svg" width="75%">
+  <img src="pic/branch-rebase.svg" width="75%">
+</p>
+
+```sh
+$ git checkout dev
+$ git rebase master
+``` 
+上面的命令之后，dev 的指针指向 C5'，但 master 的指针仍位于 C4．因此还需要一个快进合并：
+```sh
+$ git checkout master
+$ git merge dev
+```
+这样就算完成了变基操作．
+
+#### 更复杂的变基场景
+如果说 dev 分支内部还有一个 next 分支，你想将 next 分支中的改动变基到 master，但不对 dev 分支进行操作．那么使用 `--onto` 选项：
+```sh
+$ git rebase --onto master dev next
+```
+
+#### 变基的风险
+忠告：**不要对本地仓库外存在副本的分支变基**．
+
+想象一下你拉取了一个远程仓库，做了一些改动，准备推送时却发现你的同事进行了变基操作并先于你推送了．你没有办法，只能重新取回仓库，尝试合并．
+
+这会发生什么呢？变基操作实质上从历史中“清除”了一些节点，但由于你的本地仓库仍存在这些节点，你的第二次合并操作就会将这些节点重新加回到 git 快照中去．就像上一节的例子，你会既有已变基的 master 分支上的 C5'，又有 dev 分支（可能已经被你同事从远程仓库删除了）里的 C3 <- C5 这部分提交；你的 merge 操作会令人困惑，因为在别人看来 C5 和 C5' 的快照实质上是一模一样的．
+
+最后的结果就是，你同事的变基操作没有任何效果，因为你又将 dev 分支的历史给加回去了．然后你把这乱糟糟的东西推送到远程仓库，大概没有人第二天能轻易从提交历史中看懂你们两人究竟干了什么．
+
+如果，我是说万一，你的同事真的做了这样的事情，你应该在第二次取回时使用 `--rebase` 选项：
+```sh
+$ git pull --rebase ...
+```
+但这个命令也不总是保险的；根本的解决办法是，统一团队的分叉处理方式：**要么都使用合并，要么都使用变基**．
+
+#### 变基改写日志
+通过变基命令可以改写提交日志．它可以将多个提交压缩为一个，或者将一个提交拆分为多个．这里不展开介绍方法，但记住，使用交互式的命令并遵循提示将很容易完成：
+```sh
+$ git rebase -i HEAD~3
+```
+其中 `HEAD~3` 表示修改倒数第三次及以后的提交（但实际上会定位到它的父提交）．
+
+#### 合并与变基的争论
+有的开发者认为合并能够还原真实的开发流程，因此我们应当使用合并操作．改变提交历史和撒谎没什么两样.
+
+另一部分人则认为，没有人在意你们怎么开发的，应该让项目外的人查看你的仓库历史时能够迅速看懂（而不是挣扎在一堆分支中）．提交历史就像一本使用手册，需要不断修订．如果新版本手册总是比旧版本要好，那旧版本手册当然应该被抛弃．因此他们支持变基．
+
+这当然是一件没有获胜方的争论．我个人是合并的支持者，但的确双方都有各自的理由．
+ 
+## 其他 Git 命令
+### 显示 (show)
+前文我们介绍过用 `show` 命令显示某次提交的内容，或者显示一个标签：
+```sh
+$ git show ae5c314
+$ git show v1.0
+```
+其中，SHA-1 值通常用前 7 位指定．不过为了保险起见，请在 `log` 命令中使用 `--abbrev-commit` 参数，来确定其缩写位数．
+
+如果要查看一个分支上的最新提交，使用分支名即可：
+```sh
+$ git show master
+```
+
+### 引用日志 (reflog)
+引用日志记录了你每次移动 HEAD 指针的操作，只在本地有效；从远程仓库克隆并不会在本地创建包含之前操作的引用日志．
+```sh
+$ git reflog
+f435e49 (HEAD -> dev, origin/dev) HEAD@{0}: commit: Git: update to rebase.
+e6c4681 HEAD@{1}: commit: Attempt to fix center-aligning of picture in Markdown.
+f23058c HEAD@{2}: commit: Git: Branch merge with TikZ pics.
+```
+
+你可以使用 `@{n}` 来指定只显示在 `HEAD@{n}` **之前**的操作：
+```sh
+$ git reflog HEAD@{3}
+```
+
+### 储藏 (stash) 与清理 (clean)
+如果你需要切换分支，但当前分支的工作还不想提交．这时候需要用 `stash` 将更改到储存到一个栈上：
+```sh
+$ git stash
+Saved working directory and index state WIP on dev: f435e49 Git: update to rebase.
+```
+该命令会储存工作目录和暂存区．现在再运行 `git status`，工作目录是干净的．如果你不想把已经暂存的部分储藏起来，添加 `--keep-index` 选项．
+```sh
+$ git stash --keep-index
+```
+
+储藏操作默认会忽略工作目录中的未跟踪文件，除非使用 `-u` （或 `--include-untracked`） 选项：
+```sh
+$ git stash --include-untracked
+```
+
+查看你的储藏栈：
+```sh
+$ git stash list
+stash@{0}: WIP on dev: f435e49 Git: update to rebase.
+```
+
+#### 恢复储藏 (stash apply)
+从栈中恢复一个储藏到当前:
+```sh
+$ git stash apply
+$ git stash apply stash@{0}
+```
+其中 `stash@{n}` 如果不指定，会默认恢复栈顶的储藏．
+
+恢复储藏默认会把之前存入的内容都添加到工作目录（也就是说，如果你储藏时暂存区有添加的更改，这部分更改会被退还到工作目录），除非使用 `--index` 选项：
+```sh
+$ git stash apply --index
+On branch dev
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   Git/GitLearning.md
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   Git/GitLearning.md
+```
+
+注意：如果你尝试恢复到一个储藏点入栈分支之外的分支，或者你的工作目录不是干净的，恢复可能导致问题．比如你建立了一个储藏，却继续在当前位置工作，再尝试恢复．这时，你需要一个新的分支（例如命名为 dev-stash）来帮助你恢复：
+```sh
+$ git stash branch dev-stash
+```
+
+#### 丢弃储藏 (stash drop)
+最后，如果恢复操作 `apply` 没有问题，你就可以把该储藏点从栈中丢弃了：
+```sh
+$ git stash drop stash@{0}
+Dropped stash@{0} (2e843b866b3be25c3a8ccb5dd2c688b258d2d337)
+```
+你也可以用 `git stash pop` 来达到“恢复储藏，随即将其从栈中丢弃”的效果．
+
+#### 清理目录
+清理目录一般使用 `clean` 指令，它会移除所有未被追踪的文件（不包括你的 `.gitignore` 文件中排除的那些）．**这是一个危险的命令**，一个更安全的替代命令是 `git stash --all`，这样每个被移除的文件实际会被放入栈中．
+
+如果你确认要使用这个危险的命令，可以配合 `-d` 移除未追踪文件以及所有空的子目录．添加 `-f` 选项则意味着强制移除．
+```sh
+$ git clean -f -d   # 危险的命令！
+``` 
+
+安全选项 `-n` 来执行一次预演，即告诉你这个操作实际上将会移除哪些文件，但此次并不执行移除操作：
+```sh
+$ git clean -d -n   # 显示 git clean -d 将会移除的内容
+```
+选项 `-x` 允许你移除那些 `.gitignore` 通配的文件．不过无论如何，我建议你在移除操作前总是用 `-n` 选项进行检查．
+
+### GPG 签署工具
+如果你从未安装过 GPG 密钥，可以生成一个，然后查看你的密钥列表：
+```sh
+$ gpg --gen-key
+...
+$ gpg --list-keys
+/c/Users/username/.gnupg/pubring.gpg
+------------------------------------
+pub   2048R/4EA916C0 2018-04-14
+uid                  Chris Wkl <chriswkl@example.com>
+sub   2048R/D7E50003 2018-04-14
+```
+
+然后你可以将你的 git 默认私钥设置为这个：
+```sh
+git config --global user.signingkey 4EA916C0
+```
+
+#### 签署标签
+在 `tag` 命令中，用 `-s` 选项代替常规的 `-a` 选项：
+```sh
+$ git tag -s v1.0 -m "v1.0 with sign"
+```
+
+#### 签署提交
+在 `commit` 命令中添加 `-S` 选项，即可签署到提交：
+```sh
+$ git add *
+$ git commit -S -m "Signed commit."
+```
+
+#### 签署合并与拉取
+在 git 1.8.3 之后，`merge` 与 `pull` 命令都支持使用 `--verify-signatures` 来检查并拒绝没有携带可信 GPG 签名的提交．`merge` 命令可以添加 `-S` 选项来对合并后的提交添加你的签名．
+
+#### 查看与验证签名
+在 `tag` 命令中使用 `-v` 选项，以通过 GPG 来验证签名：
+```sh
+$ git tag -v v1.0
+```
+提示 "Good signature" 表示验证通过．对含有签名的标签，使用 `git show` 命令即可显示签名．
+
+对于提交，通过 `git log --show-signature` ，或者使用 `%G?` 格式通配，来查看并验证提交中的标签：
+```sh
+$ git log --show-signature -1
+commit f435e496320174bba55afbb19c1bd5ffb18c935a (HEAD -> dev, origin/dev)
+Author: wklchris <chriswkl@example.com>
+Date:   Fri Apr 13 02:23:02 2018 -0700
+
+    Git: update to rebase.
+
+$ git log --pretty="format:%h %G? %aN %s"
+f435e49 N wklchris Git: update to rebase.
+e6c4681 N wklchris Attempt to fix center-aligning of picture in Markdown.
+```
+如果你的提交不含标签，将不显示额外信息；对于 `%G?` 的显示，“N” 表示验证失败，“G” 表示验证通过．
+
+### 高级冲突处理
+#### 中断合并
+当一次合并操作出现问题，你可以使用 `--abort` 选项中断合并：
+```sh
+$ git merge --abort
+```
+该操作会恢复到你合并前的状态——如果你合并前的目录没有未提交、未提交的修改，它可能出现问题；此外的情形它总是可靠的．
+
+#### 忽略空白变更
+如果要合并的文件有空白的问题（比如将制表符格式化为空格）,可以使用 `-Xignore-all-space`（忽略已有空白处的空白修改） 或 `-Xignore-space-change`（忽略所有空白修改）．
+
+#### 手动合并文件
+这里需要一个特别的 `git show` 命令，可以将同一文件的不同版本保存到当前目录：
+```sh
+$ git show :1:hello.md > hello-ancestor.md
+$ git show :2:hello.md > hello-current.md
+$ git show :3:hello.md > hello-branch.md
+```
+其中，数字 1~3 分别表示共同祖先、当前分支、要合并的分支．然后，使用罕见的 `merge-file` 命令来合并它们：
+```sh
+# ... 做一些修改 ...
+$ git merge-file -p \
+    hello-ancestor.md hello-current.md hello-branch.md > hello.md
+```
+
+完成了合并后，可以通过以下命令查看修改的内容：
+```sh
+$ git diff --ours    # 合并与当前分支文件的不同
+$ git diff --theirs  # 合并与要合并的分支文件的不同
+$ git diff --base    # 合并怎样改动了共同祖先
+```
+选项 `-b` 可以忽略空白变更的修改．
+
+最后，新创建的三个 md 文件都没有用了，我们可以用 `clean` 命令清除：
+```sh
+$ git clean -f
+Removing hello-ancestor.md
+Removing hello-current.md
+Removing hello-branch.md
+```
+
+#### 检出冲突
+当 `merge` 命令检查到冲突时，文件中会有类似这样的片段（摘自官方手册）：
+```
+def hello
+<<<<<<< HEAD
+puts 'hola world'
+=======
+puts 'hello mundo'
+>>>>>>> mundo
+end
+```
+
+我们在之前已经介绍过，"<" 与 "-" 之间是当前分支的内容，而 "-" 与 ">" 之间是待添加分支的内容．可有时你并不清楚应当采用哪个版本，因此你希望查看它们的共同祖先的内容．使用 `--conflict=diff3`（默认是 `=merge`） 会重新生成冲突片段，但添加共同祖先内容在中间：
+```sh
+$ git checkout --conflict=diff3 hello.rb
+...
+def hello
+<<<<<<< ours
+puts 'hola world'
+||||||| base
+puts 'hello world'
+=======
+puts 'hello mundo'
+>>>>>>> theirs
+end
+```
+这样你就清楚地知道，共同祖先使用的是 "hello world"，与两者都不一样．如果你偏好这种格式，可以让 git 把合并冲突的默认格式设置成 `diff3` 模式：
+```sh
+$ git config --global merge.conflictstyle diff 
+```
+
+`checkout` 命令也有 `--ours` 与 `--theirs` 选项，用以选择对应提交的版本而抛弃另一个提交的版本．这是一种无需合并的快速方式，尤其是对二进制文件的版本控制而言．
+
+#### 查询日志
+合并冲突有时需要借助日志来解决，尝试：
+```sh
+# 显示两个分支在共同祖先之后的提交
+$ git log --oneline --left-right HEAD...MERGE_HEAD
+# 显示两个分支中与冲突文件相关的提交
+$ git log --oneline --left-right --merge
+```
+
+#### 冲突的差异与日志
+冲突发生后，未冲突的文件都被自动添加到暂存区，这是运行 `diff` 命令可以查看特殊格式的差异信息：
+```sh  
+$ git diff
+diff --cc hello.rb
+index 0399cd5,59727f0..0000000
+--- a/hello.rb
++++ b/hello.rb
+@@@ -1,7 -1,7 +1,7 @@@
+
+  def hello
+++<<<<<<< HEAD
+ +  puts 'hola world'
+++=======
++   puts 'hello mundo'
+++>>>>>>> mundo
+  end
+```
+注意，第一列表示当前分支与工作目录文件的区别（这里是多了一行 "hello mundo"，因为这是 mundo 分支中与当前分支产生冲突的文本），第二列表示 mundo 分支比当前分支多了一行 “hola world”．最后，以 “++” 开头的行表示是合并操作自动添加的，应当在冲突处理完毕后删除．此外，`-cc` 选项是应用于此场景的选项，git 已经自动添加了．
+
+解决冲突后运行 `diff`，假设结果是 “hola mundo”，会有这样的输出：
+```sh
+  def hello
+-   puts 'hola world'
+ -  puts 'hello mundo'
+++  puts 'hola mundo'
+  end
+```
+这个输出对于提交前的检查十分有用．在合并后，你也可以通过 `log` 命令加上 `-cc` 选项来获取类似的输出结果：
+```sh
+$ git merge mundo
+$ git log --cc -p -1
+```
+
+#### 撤销合并提交
+假如你错误地进行了合并，尚未进行新的更改．那么可以使用：
+```sh
+$ git reset --hard HEAD~
+```
+这是因为 HEAD 分支指向 master 上的合并提交，向前回退到父提交则是移动 HEAD 到 master 合并前的那个版本．至于并入的分支的指针，它并没有移动过．
+
+**如果你的仓库已经推送到远程，那么上述方法是不合适的**；请记住，`reset` 命令会更改日志，在共享工作流中需要避免．这时的替代方案是 `revert` 命令：
+```sh
+$ git revert -m 1 HEAD
+```
+选项 `-m 1` 表示保留该合并提交的第一父提交（即位于 master 分支的父提交）．尚未完成的合并提交中，第一父提交是 HEAD，第二父提交是并入分支（假设叫 dev）的最新提交．上述命令会撤销从第二父提交中引入的更改，同时保留第一父提交中的所有内容．注意：本命令实质上在合并提交 `M` 后**新建**了一个提交 `M'`，但 `M` 仍然被保留在了日志中．
+<p align="center">
+  <img src="pic/branch-revert.svg" width="75%">
+</p>
+这里 M' 实质与 C4 的快照相同．
+
+这样做的问题是，如果你再尝试合并，git 不会响应你的请求：
+```sh
+$ git merge dev
+Already up-to-date.
+```
+也就是 C5 并不能和 M' 合并；因为 C5 已经可以由 M' 回溯到达，git 认为没有合并可以做．更不妙的是，假如你在 dev 分支又更新了内容（提交 C6），请**不要**与 M' 直接合并，否则 C3 与 C5 这两个位于上一次合并之前的更改不会被加入这次合并（而上一次合并，也就是 M，实质上又被 M' 遮盖了），你就会在这次合并后发现 C3 与 C5 的内容并没有被加入到新的合并提交中去．
+
+解决方法是利用 `revert` 命令，将 M' 再反转回去，“恢复” M 这个合并提交（因为 M 是包含 C3 与 C5 内容算的），之后再进行合并：
+```sh
+$ git revert   # revert M'
+$ git merge dev
+```
+这样新建的 M'' 提交实质上等同于之前的合并提交 M． 
+<p align="center">
+  <img src="pic/branch-revert-2.svg" width="80%">
+</p>
+
+#### 偏好合并
+如果你预计合并中会出现冲突，但你只要求 master 分支的内容覆盖 dev 分支的内容，你可以使用 `-Xours` 选项：
+```sh
+$ git merge -Xours dev
+```
+正如上文提及的，“ours” 指代当前分支，“theirs” 指代待合并分支．因此你也可以类似地使用 `-Xtheirs` 选项．
+
+这两个选项对于 `merge-file` 命令也生效．
+
+#### 伪合并
+伪合并（fake merge）是指一种欺骗 git 创建合并提交的方式．它使用 `-s` 选项，指定一个伪合并策略（通常是 `ours`）：
+```sh
+$ git merge -s ours dev
+```
+作用是将当前分支的最新提交直接复制为这个合并提交（完全不管来自 dev 的最新提交是什么）．例如，你的 bugfix 分支解决了一个 master 分支的问题．考虑到你的开发分支 dev 尚不能向 master 合并，你需要做的是：
+```sh
+$ git checkout master
+$ git merge -s ours bugfix
+$ git checkout dev
+$ git merge bugfix
+...
+$ git branch -d bugfix
+```
+向 master 分支伪合并 bugfix 分支（即使已经真的合并过了）的好处是欺骗了 git；以后将 dev 分支向 master 分支合并时，就不会有来自 bugfix 分支的冲突．
