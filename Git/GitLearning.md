@@ -42,10 +42,10 @@
             3. [推送到远程仓库 (push)](#推送到远程仓库-push)
             4. [管理远程仓库 (remote)](#管理远程仓库-remote)
         7. [标签 (tag)](#标签-tag)
-            1. [添加标签](#添加标签)
-            2. [追加标签](#追加标签)
-            3. [查看标签](#查看标签)
-            4. [推送标签](#推送标签)
+            1. [添加或追加标签](#添加或追加标签)
+            2. [查看标签](#查看标签)
+            3. [推送标签](#推送标签)
+            4. [删除标签](#删除标签)
             5. [回退到标签](#回退到标签)
         8. [别名 (alias)](#别名-alias)
     5. [分支 (branch)](#分支-branch)
@@ -214,7 +214,7 @@ A  lib/git.rb
 M  lib/simplegit.rb
 ?? LICENSE.txt
 ```
-上例中，偏右的 `M` 表示修改了尚未暂存，偏左的 `M` 表示修改并已暂存．`A` 表示一个新加入追踪的文件，最后 `??` 表示新检测到的未追踪的文件．
+上例中，偏右的 `M` 表示修改了尚未暂存，偏左的 `M` 表示修改并已暂存．`A` 表示一个新加入追踪的文件，最后 `??` 表示新检测到的未追踪的文件．你也可以使用 `-sb` 参数，这会显示你当前的分支信息．
 
 #### 暂存文件 (add)
 ```sh
@@ -499,26 +499,23 @@ $ git remote rm <remote-name>
 ```
 
 ### 标签 (tag)
-#### 添加标签
+#### 添加或追加标签
 有时我们需要标签来标记节点，比如重要版本是在哪个 commit 发布的：
 ```sh
 $ git tag v1.0
 ```
-这个语句没有使用任何参数，称为**轻量标签（Lightweighted tag）**．它会将 "v1.0" 标签加到最后一次 commit 上．
-
-如果你想同时附上一些说明文字，使用**附注标签（Annotated tag）**，即用 `-a` 选项：
+这个语句没有使用任何参数，称为**轻量标签（Lightweighted tag）**．它会将 "v1.0" 标签加到最后一次 commit 上．如果你想同时附上一些说明文字，使用**附注标签（Annotated tag）**，即用 `-a` 选项：
 ```sh
 $ git tag -a v1.0 -m "This is a new version."
 ```
 
-#### 追加标签
 如果要添加标签到以往的 commit 位置，可以指定对应 commit 的哈希值（或其前 7 位），例如:
 ```sh
 $ git tag -a v1.0 36e8d6b
 ```
 
 #### 查看标签
-查看所有的标签，或用上文介绍的 <a href="#glob">glob 模式</a>查询：
+查看所有的标签，或用上文介绍的 <a href="#glob">glob 模式</a> 查询：
 ```sh
 $ git tag
 $ git tag --list "v1.0*"
@@ -535,9 +532,22 @@ $ git show v1.0
 $ git push origin v1.0
 ```
 
-如果你想将全部标签推送，使用 `--tags` 选项：
+如果你想将不在远程仓库中的标签全部推送，使用 `--tags` 选项：
 ```sh
 $ git push origin --tags
+```
+
+#### 删除标签
+用 `-d` 选项删除标签：
+```sh
+$ git tag -d v1.0 
+```
+
+如果标签已经推送到远程，仍然可以删除它：
+```sh
+$ git push origin :refs/tags/v1.0
+To https://github.com/wklchris/CS-Learning.git
+ - [deleted]         v1.0
 ```
 
 #### 回退到标签
@@ -550,7 +560,7 @@ git checkout -b <branch_name> <tag_name>
 ### 别名 (alias)
 关于别名的使用我们在前文已经有所提及，这里有一些常用的例子：
 ```sh
-$ git config --global alias.st status
+$ git config --global alias.st status -sb
 $ git config --global alias.unstage 'reset HEAD --'
 $ git config --gloabl alias.last 'log -1 HEAD'
 ```
