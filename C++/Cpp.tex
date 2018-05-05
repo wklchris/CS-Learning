@@ -1,0 +1,207 @@
+\documentclass[a4paper, zihao=-4, linespread=1]{ctexrep}
+\input{../TeXPkgHeading.tex}
+
+\newcommand\cpp{\texttt{C++}}
+\NewDocumentCommand{\cppline}{v}{{\lstinline[language=C++]{#1}}}
+\newcommand\cpplib[1]{\textcolor{red!80!black}{\bfseries #1}}
+
+\newcommand\hlt[1]{\textcolor{red}{\bfseries #1}}
+\newcommand\cppkw[1]{\textcolor{black}{\bfseries #1}}
+
+% Document Info
+\title{\cpp\ 入门}
+\author{
+  本系列笔记托管于 \href{https://github.com/wklchris/CS-Learning}{CS-Learning} Github 仓库\\
+  by \href{email:wklchris@hotmail.com}{wklchris}
+}
+\date{更新于：~\today}
+
+\begin{document}
+\maketitle
+
+\chapter{入门}
+\cpp\ 是一种面向对象的高级语言，大部分继承自 \texttt{C} 语言．本手册希望读者有编程基础．
+
+\section{数据类型}
+\begin{description}
+\item[int] 整型．
+\end{description}
+
+\section{基础操作符}
+\cpp\ 中的基础操作符有如下：
+\begin{description}
+\item[赋值符] 等号 \cppline{=} 用于赋值，即将右操作数的值赋给左操作数；它也是大部分主流编程语言的赋值符．
+\item[数学运算符] 四则运算符 \cppline{+ - * /}．
+\item[复合赋值符] 比如 \cppline{a += b}，将右操作数 \cppline{b} 与左操作数 \cppline{a} 相加，再赋值给左操作数；相当于 \cppline{a = a+b}．类似的还有 \cppline{-= *= /=}．
+\item[自增符] 比如 \cppline{++i}，结果上与 \cppline{i = i + 1} 相同．另一种写法是 \cppline{i++}，区别在于 \cppline{a = ++i} 会先自增再赋值，而 \cppline{a = i++} 则相反．虽然两种都适用，但\hlt{通常将自增符写在变量左侧}，即 \cppline{++i}．
+\item[自减符] 类似，比如 \cppline{--i}．
+\end{description}
+
+\section{主函数}
+废话不谈，单刀直入．一个最简单的 \cpp 程序：
+\begin{cpplang}
+int main() {
+    return 0;
+}
+\end{cpplang}
+\hlt{\cpp\ 必须有 \texttt{main()} 函数}．
+
+\section{编译}
+将上节中的三行代码保存于 \texttt{test.cpp} 文件中，并编译（以 \href{http://www.mingw.org}{\texttt{g++}} 为例）：
+\begin{lstlisting}
+g++ test.cpp -o test
+\end{lstlisting}
+其中参数 \texttt{-o} 表示编译结果将命名为 \texttt{test.exe}．
+
+\section{标准库：例子}
+\cpp\ 本身不提供输入或输出，但其标准库 \cpplib{iostream} 提供了该功能．它支持 4 个输入输出对象，分别是标准输入  \cppline{cin}，标准输出 \cppline{cout}，标准错误 \cppline{cerr}，与日志 \cppline{clog}．
+
+库的加载语句以 \cppline{#include} 开头：
+\begin{cpplang}
+#include <iostream>
+int main() {
+    std::cout << "Add two numbers:" << std::endl;
+    int a, b;
+    std::cin >> a >> b;
+    std::cout << a + b << std::endl;
+    return 0;
+}
+\end{cpplang}
+其中，尖括号中的 \cppline{iostream} 是\cppkw{头文件}．而 \cppline{<<} 称为\cppkw{输出操作符}，会返回左操作数（即 \cppline{std::cout}）．类似的，\cppline{>>} 称为\cppkw{输入操作符}，也返回左操作数．因为它们都返回左操作数，所以可以连写\footnote{类似于做加法，$(1+2)+4$ 实质是两个加法操作 $1+2=3$ 与 $3+4$ 的连写}．
+
+\cppline{std::endl} 叫 \cppkw{操纵符（manipulator）}，在输出流中生成换行，并刷新缓冲区来立刻更新将输出流输出．
+
+上例中的 \cppline{std::cout} 表示命令 \cppline{cout} 来自 \cppline{std} \cppkw{命名空间（namespace）}．如果使用 \cppline{using namespace std;} 命令，就可以不用再指定命名空间 \cppline{std}：“
+\begin{cpplang}
+#include <iostream>
+using namespace std;
+int main() {
+    cout << "Add two numbers:" << endl;
+    int a, b;
+    cin >> a >> b;
+    cout << a + b << endl;
+    return 0;
+}
+\end{cpplang} 
+
+\section{注释}
+\cpp\ 中的注释：
+\begin{itemize}
+\item 单行注释：以 \cppline{//} 开头，该行位于其后的部分都是注释．
+\item 多行注释：以 \cppline{/*} 开头、以 \cppline{*/} 结尾，之间是注释．
+\end{itemize}
+
+唯一需要注意的地方是\hlt{多行注释不可嵌套}．因此，在注释多行代码时，编辑器通常的做法是在每一行的行首插入单行注释符号．
+
+\chapter{语法}
+\section{控制语句}
+\begin{description}
+\item[条件语句] \cppline{if} 语句．
+\item[循环语句] 包含 \cppline{for} 与 \cppline{while} 两种形式．
+\end{description}
+
+\subsection{if 语句}
+输出两数中较大数的例子：
+\begin{cpplang}
+#include <iostream>
+int main() {
+    int s, a, b;
+    std::cout << "Input two numbers:" << std::endl;
+    std::cin >> a >> b;
+    if (a > b) {
+        s = a;
+    } else {
+        s = b;
+    }
+    std::cout << s << std::endl;
+    return 0;
+}
+\end{cpplang}
+
+\subsection{for 语句}
+输出 $1+2+3$ 计算结果的例子：
+\begin{cpplang}
+#include <iostream>
+int main() {
+    int s = 0;
+    for (int i = 1; i < 4; ++i) {
+        s += i;
+    }
+    std::cout << s << std::endl;
+    return 0;
+}
+\end{cpplang}
+以上循环定义了循环变量 \cppline{i}，它将被赋初值 1，然后检测是否满足 $i<4$ 的条件．若满足就执行循环体内容，并将 \cppline{i} 自增 1，再进行检测……直到条件不满足为止．请谨记，\cppline{for} 循环的\hlt{初次循环前就会检查条件是否满足}．
+
+上例中的变量 \cppline{i} 是在循环内声明的，因此在循环外不可再访问．
+
+\subsection{while 语句}
+同样是输出 $1+2+3$ 计算结果的例子，不过这次使用 \cppline{while} 循环：
+\begin{cpplang}
+#include <iostream>
+int main() {
+    int s = 0, i = 1;
+    while (i < 4) {
+        s += i;
+        ++i;
+    }
+    std::cout << s << std::endl;
+    return 0;
+}
+\end{cpplang}
+
+\section{类}
+\cpp\ 有许多预定义的数据类型，比如整型、布尔型． \cppkw{类（class）}的存在使得我们可以自定义这样的“数据类型”，这也是面向对象编程的精髓．上文介绍的标准库 \cpplib{iostream}，其实也是一种类．
+
+本节以扑克牌为例，说明一个类该如何设计、怎样定义，并展示它如何使得代码书写更快速、更易读．
+
+\subsection{类的设计}
+对于一副不含大小王的扑克牌，我们很容易发现每张牌的共有特征：每张牌都有一种花色，并且有一个点数值．根据这两个特征，我们就能从一副扑克中精确地找到这张牌．因此，我们的类就需要两个\cppkw{成员}．
+
+如果我们不定义类，而是使用 \cpp\ 预定义的数据类型，怎么表示一副扑克牌？朴素的想法是使用两个长度为 52 的数组，一个是字符串数组 $A$，每个元素记录花色；另一个是整型数组 $B$，每个元素记录点数值．然后，我们将同一个索引值 $i$ 对应的花色与点数结合起来，组成一张花色为 $A[i]$、点数为 $B[i]$ 的扑克．
+
+上述的这种定义方式十分笨拙；而且阅读者很难注意到两个数组间关联的含义，因此代码可读性也会很差．定义一个扑克类会帮助我们改善代码．
+
+\subsection{类的定义}
+类的定义方式是在工作目录下建立一个扩展名为 \texttt{.h} 的文件，比如 \texttt{Poker.h}：
+\begin{cpplang}
+#include <string>
+using namespace std;
+
+class Poker {
+    int val;
+    string s;
+public:
+    Poker(string suits, int number);  // Contructor
+    string stringfy(void) {
+        return s + " " + to_string(val);
+    }
+};
+
+Poker::Poker(string suits, int number) {
+    s = suits;
+    val = number;
+}
+\end{cpplang}
+注意，类定义语句（\cppline{class} 语句）是\hlt{需要分号结尾}的．
+
+在 \cppline{Poker} 类的定义中，\cppline{public} 以下的行都是公有成员．未指明的（或指明 \cppline{private} 的）则是私有成员，它们无法从类外被访问．
+
+上例中有一个公有函数 \cppline{Poker}， 与该类同名，称为\cppkw{构造函数（constructor）}．该函数在声明一个类的\cppkw{实例（instance）}时会直接被调用，用来完成一些创建实例的操作．
+
+\subsection{类的使用}
+在主文件中，使用 \cppline{#include "Poker.h"} 来加载这个类．构造变量 \cppline{a} 时将花色与点数两个参数传入，组成一个“梅花 9”扑克牌．
+\begin{cpplang}
+#include <iostream>
+#include "Poker.h"
+using namespace std;
+
+int main() {
+    Poker a ("Club", 9);
+    cout << a.stringfy() << endl;
+    return 0;
+}
+\end{cpplang}
+上例会输出“Club 9”．
+
+\end{document}

@@ -1,6 +1,6 @@
 % Typesetting Formats
-\setlength{\lineskiplimit}{3pt}
-\setlength{\lineskip}{3pt}
+\setlength{\lineskiplimit}{4pt}
+\setlength{\lineskip}{4pt}
 
 \usepackage{geometry}
   \geometry{vmargin=1.1in, hmargin=1.2in}
@@ -28,6 +28,40 @@
 \usepackage{standalone}
 \usepackage{tikz}
   \usetikzlibrary{math}
+
+% Code Listing
+\usepackage{listings}
+% 复制代码时不复制行号
+\usepackage{accsupp}
+	\newcommand{\emptyaccsupp}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
+\usepackage{tcolorbox}
+  \tcbuselibrary{listings,skins,breakable,xparse}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  % Word styles
+  keywordstyle=\color{blue},
+  commentstyle=\color{green!50!black},
+  columns=fullflexible,  % Avoid too sparse word spaces
+  keepspaces=true,
+  % Numbering
+  numbers=left,
+  numberstyle=\tiny\color{red!75!black}\emptyaccsupp,
+  % Lines and Skips
+  aboveskip=0pt plus 6pt,
+  belowskip=0pt plus 6pt,
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  emptylines=1,  % Avoid >1 consecutive empty lines
+  escapeinside=``
+}
+
+\newtcblisting{cpplang}{breakable,skin=bicolor,colback=gray!30!white,
+  colbacklower=white,colframe=cyan!75!black,listing only, 
+  left=6mm,top=2pt,bottom=2pt,fontupper=\small,
+  listing options={language=C++}
+}
 
 % Links
 \usepackage{hyperref}
